@@ -2,11 +2,11 @@ package com.example.sideproject01.service;
 
 import com.example.sideproject01.dto.VotesDto;
 import com.example.sideproject01.entity.Board;
-import com.example.sideproject01.entity.Users;
+import com.example.sideproject01.entity.User;
 import com.example.sideproject01.entity.VoteResults;
 import com.example.sideproject01.entity.Votes;
 import com.example.sideproject01.repository.BoardRepository;
-import com.example.sideproject01.repository.UsersRepository;
+import com.example.sideproject01.repository.UserRepository;
 import com.example.sideproject01.repository.VoteResultsRepository;
 import com.example.sideproject01.repository.VotesRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class VoteService {
 
     private final VotesRepository votesRepository;
     private final VoteResultsRepository voteResultsRepository;
-    private final UsersRepository usersRepository;
+    private final UserRepository usersRepository;
     private final BoardRepository boardRepository;
 
     /**
@@ -63,7 +63,7 @@ public class VoteService {
      */
     @Transactional
     public Long castVote(Long userId, Long optionId) {
-        Users user = usersRepository.findById(userId)
+        User user = usersRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다. ID: " + userId));
 
         Votes voteOption = votesRepository.findById(optionId)
@@ -97,7 +97,7 @@ public class VoteService {
 
         List<Votes> options = votesRepository.findByBoard(board);
 
-        Users user = (userId != null) ? usersRepository.findById(userId).orElse(null) : null;
+        User user = (userId != null) ? usersRepository.findById(userId).orElse(null) : null;
 
         return options.stream().map(option -> {
             VotesDto dto = VotesDto.fromEntity(option);

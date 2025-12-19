@@ -3,7 +3,7 @@ package com.example.sideproject01.dto;
 import java.time.LocalDateTime;
 
 import com.example.sideproject01.entity.Likes;
-import com.example.sideproject01.entity.Users;
+import com.example.sideproject01.entity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,7 +39,7 @@ public class LikesDto {
     public Likes toEntity() {
         return Likes.builder()
                 .likeId(this.likeId)
-                .user(this.userId != null ? Users.builder().id(this.userId).build() : null)
+                .user(this.userId != null ? User.builder().id(this.userId).build() : null)
                 .targetType(this.targetType)
                 .targetId(this.targetId)
                 .createdAt(this.createdAt)

@@ -4,10 +4,10 @@ import com.example.sideproject01.dto.CommentDto;
 import com.example.sideproject01.dto.CommentListResponse;
 import com.example.sideproject01.entity.Board;
 import com.example.sideproject01.entity.Comments;
-import com.example.sideproject01.entity.Users;
+import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.BoardRepository;
 import com.example.sideproject01.repository.CommentsRepository;
-import com.example.sideproject01.repository.UsersRepository;
+import com.example.sideproject01.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentsRepository commentsRepository;
     private final BoardRepository boardRepository;
-    private final UsersRepository usersRepository;
+    private final UserRepository usersRepository;
     private final LikesService likesService;
 
     // 게시글에 달린 댓글 목록 (페이징 처리 및 계층 구조 포함)
@@ -101,13 +101,13 @@ public class CommentServiceImpl implements CommentService {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new NoSuchElementException("게시글을 찾을 수 없습니다."));
 
-        Users user;
+        User user;
         org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // If user is properly authenticated (not anonymous)
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             String username = authentication.getName();
-            user = usersRepository.findByUsername(username)
+            user = usersRepository.findByUserName(username)
                     .orElseThrow(() -> new NoSuchElementException("인증된 사용자를 찾을 수 없습니다: " + username));
         }
         // For testing via Swagger, fallback to userId from DTO
