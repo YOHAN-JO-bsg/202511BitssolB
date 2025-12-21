@@ -28,7 +28,7 @@ public class Likes {
     // 누른 사용자 FK (users.id)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
-    private Users user;
+    private User user;
 
     // 대상 타입 (POST / COMMENT)
     @Column(name = "target_type", length = 20)

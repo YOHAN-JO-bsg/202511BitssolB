@@ -31,7 +31,7 @@ public class VoteResults {
     // 투표한 사용자 FK
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
-    private Users user;
+    private User user;
 
     // 투표일
     @CreationTimestamp

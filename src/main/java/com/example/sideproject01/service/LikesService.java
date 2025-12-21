@@ -1,9 +1,9 @@
 package com.example.sideproject01.service;
 
 import com.example.sideproject01.entity.Likes;
-import com.example.sideproject01.entity.Users;
+import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.LikesRepository;
-import com.example.sideproject01.repository.UsersRepository;
+import com.example.sideproject01.repository.UserRepository;
 import com.example.sideproject01.repository.BoardRepository; // BoardRepository 추가
 import com.example.sideproject01.repository.CommentsRepository; // CommentsRepository 추가 (댓글 좋아요를 위해)
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.Optional;
 public class LikesService {
 
     private final LikesRepository likesRepository;
-    private final UsersRepository usersRepository;
+    private final UserRepository usersRepository;
     private final BoardRepository boardRepository; // 게시글 좋아요 확인용
     private final CommentsRepository commentsRepository; // 댓글 좋아요 확인용
 
@@ -31,7 +31,7 @@ public class LikesService {
      */
     @Transactional
     public boolean toggleLike(Long userId, String targetType, Long targetId) {
-        Users user = usersRepository.findById(userId)
+        User user = usersRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다. ID: " + userId));
 
         // 대상 존재 여부 확인 (게시글 또는 댓글)
@@ -84,7 +84,7 @@ public class LikesService {
      */
     @Transactional(readOnly = true)
     public boolean isLikedByUser(Long userId, String targetType, Long targetId) {
-        Users user = usersRepository.findById(userId)
+        User user = usersRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다. ID: " + userId));
         return likesRepository.findByUserAndTargetTypeAndTargetId(user, targetType, targetId).isPresent();
     }
