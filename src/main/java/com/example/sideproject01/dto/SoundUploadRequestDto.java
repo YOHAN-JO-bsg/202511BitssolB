@@ -16,6 +16,4 @@ public class SoundUploadRequestDto {
 	
 	@NotBlank(message="설명은 필수 입니다")
 	private String description;
-	
-	private String uploader;
 }
