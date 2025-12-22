@@ -15,8 +15,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.sideproject01.dto.SoundDto;
 import com.example.sideproject01.dto.SoundUploadRequestDto;
 import com.example.sideproject01.entity.Sound;
+import com.example.sideproject01.entity.SoundTag;
+import com.example.sideproject01.entity.Tag;
 import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.SoundRepository;
+import com.example.sideproject01.repository.SoundTagRepository;
+import com.example.sideproject01.repository.TagRepository;
 import com.example.sideproject01.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,8 @@ public class SoundServiceImpl implements SoundService {
 
 	private final SoundRepository soundRepo;
 	private final UserRepository userRepo;
+	private final TagRepository tagRepo;
+	private final SoundTagRepository soundTagRepo;
 
 	@Value("${file.location}")
 	private String fileLocation; // 파일을 저장할 위치
@@ -100,6 +106,21 @@ public class SoundServiceImpl implements SoundService {
 				.build();
 
 		soundRepo.save(soundEntity);
+		
+		// 태그 저장
+		if (requestDto.getTagIds() != null && !requestDto.getTagIds().isEmpty()) {
+		    for (Integer tagId : requestDto.getTagIds()) {
+		        Tag tag = tagRepo.findById(tagId)
+		                .orElseThrow(() -> new IllegalArgumentException("태그를 찾을 수 없습니다: " + tagId));
+		        
+		        SoundTag soundTag = SoundTag.builder()
+		                .soundId(soundEntity)
+		                .tagId(tag)
+		                .build();
+		        
+		        soundTagRepo.save(soundTag);
+		    }
+		}
 
 		return null;
 	}
