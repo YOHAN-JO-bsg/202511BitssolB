@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1")
+@CrossOrigin(origins = "http://localhost:5173") // 프론트엔드 CORS 허용
 @Tag(name = "Board", description = "Board and Comment API")
 public class BoardController {
 
@@ -29,9 +30,11 @@ public class BoardController {
     private final LikesService likesService;
     private final VoteService voteService;
 
-    /* =============================
+    /*
+     * =============================
      * ✅ [댓글 관련 API]
-     * ============================= */
+     * =============================
+     */
 
     // 댓글 등록
     @PostMapping("/board/{boardId}/comments")
@@ -43,7 +46,7 @@ public class BoardController {
     // 댓글 수정
     @PatchMapping("/comments/{commentId}")
     public ResponseEntity<Void> updateComment(@PathVariable Long commentId, @RequestBody CommentDto dto,
-                                            @RequestParam("userId") Long userId) {
+            @RequestParam("userId") Long userId) {
         commentService.updateComment(commentId, dto, userId);
         return ResponseEntity.noContent().build();
     }
@@ -51,17 +54,19 @@ public class BoardController {
     // 댓글 삭제
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long commentId,
-                                            @RequestParam("userId") Long userId) { // <-- userId 추가
+            @RequestParam("userId") Long userId) { // <-- userId 추가
         commentService.deleteComment(commentId, userId); // <-- userId 전달
         return ResponseEntity.noContent().build();
     }
 
     // 댓글 삭제 테스트 이전 삭제 로직 위에거와 비교해서 쓰기
-    /* @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
-        commentService.deleteComment(commentId);
-        return ResponseEntity.noContent().build();
-    } */
+    /*
+     * @DeleteMapping("/comments/{commentId}")
+     * public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
+     * commentService.deleteComment(commentId);
+     * return ResponseEntity.noContent().build();
+     * }
+     */
 
     // 댓글 목록 (페이징 + 계층 구조)
     @GetMapping("/board/{boardId}/comments")
@@ -74,9 +79,11 @@ public class BoardController {
         return ResponseEntity.ok(response);
     }
 
-    /* =============================
+    /*
+     * =============================
      * ✅ [좋아요 관련 API]
-     * ============================= */
+     * =============================
+     */
     // 좋아요 추가/취소 (토글)
     @PostMapping("/likes")
     public ResponseEntity<Boolean> toggleLike(@RequestBody LikesDto likesDto) {
@@ -85,13 +92,16 @@ public class BoardController {
         if (likesDto.getUserId() == null) {
             throw new IllegalArgumentException("userId는 필수입니다.");
         }
-        boolean isLiked = likesService.toggleLike(likesDto.getUserId(), likesDto.getTargetType(), likesDto.getTargetId());
+        boolean isLiked = likesService.toggleLike(likesDto.getUserId(), likesDto.getTargetType(),
+                likesDto.getTargetId());
         return ResponseEntity.ok(isLiked);
     }
 
-    /* =============================
+    /*
+     * =============================
      * ✅ [투표 관련 API]
-     * ============================= */
+     * =============================
+     */
     // 투표 실행
     @PostMapping("/votes/cast")
     public ResponseEntity<Long> castVote(@RequestBody VoteResultsDto voteResultsDto) {
@@ -104,18 +114,18 @@ public class BoardController {
         return ResponseEntity.ok(resultId);
     }
 
-
-    /* =============================
+    /*
+     * =============================
      * ✅ [게시판 관련 API]
-     * ============================= */
+     * =============================
+     */
 
     // ✅ 게시글 목록 (카테고리 + 페이징)
     @GetMapping("/board")
     public ResponseEntity<BoardListResponse> getBoardList(
             @RequestParam(defaultValue = "all") String category,
             @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize
-    ) {
+            @RequestParam(defaultValue = "10") int pageSize) {
         BoardListResponse response = boardService.getBoardList(pageNum, pageSize, category);
         return ResponseEntity.ok(response);
     }
@@ -123,7 +133,7 @@ public class BoardController {
     // ✅ 게시글 상세 조회
     @GetMapping("/board/{id}")
     public ResponseEntity<BoardDto> getDetail(@PathVariable Long id,
-                                            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long userId) {
         BoardDto dto = boardService.getDetail(id, userId);
         return ResponseEntity.ok(dto);
     }

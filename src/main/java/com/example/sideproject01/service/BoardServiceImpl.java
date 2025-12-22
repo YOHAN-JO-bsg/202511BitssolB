@@ -55,17 +55,16 @@ public class BoardServiceImpl implements BoardService {
         int endPageNum = Math.min(currentBlock * blockSize, totalPageCount);
 
         return BoardListResponse.builder()
-                .list(dtoList)
-                .pageNum(pageNum)
+                .boards(dtoList)
+                .currentPage(pageNum)
                 .pageSize(pageSize)
-                .totalRow(totalRow)
-                .totalPageCount(totalPageCount)
+                .totalElements(totalRow)
+                .totalPages(totalPageCount)
                 .startPageNum(startPageNum)
                 .endPageNum(endPageNum)
                 .category(category)
                 .build();
     }
-
 
     /**
      * ✅ 게시글 등록
@@ -141,7 +140,8 @@ public class BoardServiceImpl implements BoardService {
         }
 
         // VoteService를 사용하여 투표 정보 추가
-        java.util.List<com.example.sideproject01.dto.VotesDto> voteOptions = voteService.getVoteOptionsWithResults(id, userId);
+        java.util.List<com.example.sideproject01.dto.VotesDto> voteOptions = voteService.getVoteOptionsWithResults(id,
+                userId);
         dto.setVoteOptions(voteOptions);
         // 사용자가 해당 게시글의 투표에 참여했는지 여부 (어떤 항목이든 하나라도 선택했다면 true)
         dto.setVotedByUser(voteOptions.stream().anyMatch(com.example.sideproject01.dto.VotesDto::isSelectedByUser));
