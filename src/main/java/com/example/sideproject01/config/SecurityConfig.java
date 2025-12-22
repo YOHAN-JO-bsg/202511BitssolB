@@ -10,33 +10,33 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-// 임시로 비활성화 (테스트용) - 내일 로그인 기능 추가 시 주석 해제하세요!
-//@Configuration
+@Configuration
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ CORS 활성화
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // ✅ CORS 활성화
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // CSRF 비활성화
-                .csrf(csrf -> csrf.disable())
+            // CSRF 비활성화
+            .csrf(csrf -> csrf.disable())
 
-                // 요청 경로별 권한 설정
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-resources/**",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml",
-                                "/webjars/**")
-                        .permitAll()
-                        .anyRequest().permitAll())
+            // 요청 경로별 권한 설정
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/swagger-resources/**",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs.yaml",
+                    "/webjars/**"
+                ).permitAll()
+                .anyRequest().permitAll()
+            )
 
-                // 로그인창, 인증창 비활성화
-                .formLogin(form -> form.disable())
-                .httpBasic(basic -> basic.disable());
+            // 로그인창, 인증창 비활성화
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable());
 
         return http.build();
     }

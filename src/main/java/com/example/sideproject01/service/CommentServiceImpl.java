@@ -4,10 +4,10 @@ import com.example.sideproject01.dto.CommentDto;
 import com.example.sideproject01.dto.CommentListResponse;
 import com.example.sideproject01.entity.Board;
 import com.example.sideproject01.entity.Comments;
-import com.example.sideproject01.entity.Users;
+import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.BoardRepository;
 import com.example.sideproject01.repository.CommentsRepository;
-import com.example.sideproject01.repository.UsersRepository;
+import com.example.sideproject01.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -41,8 +41,7 @@ public class CommentServiceImpl implements CommentService {
 
         // 최상위 댓글 (parent가 null인 댓글)만 페이징 처리하여 조회
         long totalRowCount = commentsRepository.countRootCommentsByBoard(board.getBoardId(), isHidden);
-        List<Comments> rootCommentsList = commentsRepository.findRootCommentsByBoardWithPagination(board.getBoardId(),
-                isHidden, startRow, endRow);
+        List<Comments> rootCommentsList = commentsRepository.findRootCommentsByBoardWithPagination(board.getBoardId(), isHidden, startRow, endRow);
 
         // 최상위 댓글 DTO로 변환 및 자식 댓글 계층 구조 구축
         List<CommentDto> rootCommentDtos = rootCommentsList.stream()
@@ -59,26 +58,24 @@ public class CommentServiceImpl implements CommentService {
                     return rootDto;
                 })
                 .collect(Collectors.toList());
-
+        
         // 페이지 정보 수동 계산
         int totalPageNum = (int) Math.ceil((double) totalRowCount / pageSize);
 
         // CommentListResponse 객체 구성
         return CommentListResponse.builder()
-                .comments(rootCommentDtos)
-                .currentPage(pageNum)
-                .totalPages(totalPageNum)
-                .totalElements(totalRowCount)
+                .list(rootCommentDtos)
+                .pageNum(pageNum)
                 .startPageNum(1) // 페이지 블록 계산 로직은 일단 단순화
                 .endPageNum(totalPageNum)
+                .totalPageNum(totalPageNum)
                 .build();
     }
 
     // 자식 댓글을 재귀적으로 가져오는 헬퍼 메소드
     private List<CommentDto> getChildrenComments(Comments parentComment, Long userId) { // userId 파라미터 추가
         // parentComment를 부모로 가지는 모든 댓글을 가져와서 정렬
-        List<Comments> childrenEntities = commentsRepository.findByParentAndIsHiddenOrderByCreatedAtAsc(parentComment,
-                0);
+        List<Comments> childrenEntities = commentsRepository.findByParentAndIsHiddenOrderByCreatedAtAsc(parentComment, 0);
 
         return childrenEntities.stream()
                 .map(childComment -> {
@@ -105,12 +102,10 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new NoSuchElementException("게시글을 찾을 수 없습니다."));
 
         Users user;
-        org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext()
-                .getAuthentication();
+        org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // If user is properly authenticated (not anonymous)
-        if (authentication != null && authentication.isAuthenticated()
-                && !"anonymousUser".equals(authentication.getName())) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             String username = authentication.getName();
             user = usersRepository.findByUsername(username)
                     .orElseThrow(() -> new NoSuchElementException("인증된 사용자를 찾을 수 없습니다: " + username));
@@ -172,3 +167,4 @@ public class CommentServiceImpl implements CommentService {
         commentsRepository.save(comment);
     }
 }
+

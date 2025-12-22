@@ -2,7 +2,7 @@ package com.example.sideproject01.dto;
 
 import com.example.sideproject01.entity.Board;
 import com.example.sideproject01.entity.Comments;
-import com.example.sideproject01.entity.Users;
+import com.example.sideproject01.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -42,7 +42,7 @@ public class CommentDto {
                 .boardId(entity.getBoard() != null ? entity.getBoard().getBoardId() : null)
                 .parentId(entity.getParent() != null ? entity.getParent().getCommentsId() : null)
                 .content(entity.getContent())
-                .writer(entity.getUser() != null ? entity.getUser().getUsername() : "익명")
+                .writer(entity.getUser() != null ? entity.getUser().getUserName() : "익명")
                 .isHidden(entity.getIsHidden())
                 .createdAt(entity.getCreatedAt())
                 .children(new ArrayList<>()) // 초기화
@@ -55,7 +55,7 @@ public class CommentDto {
     public Comments toEntity() {
         return Comments.builder()
                 .commentsId(this.commentId)
-                .user(this.userId != null ? Users.builder().id(this.userId).build() : null)
+                .user(this.userId != null ? User.builder().id(this.userId).build() : null)
                 .board(this.boardId != null ? Board.builder().boardId(this.boardId).build() : null)
                 .parent(this.parentId != null ? Comments.builder().commentsId(this.parentId).build() : null)
                 .content(this.content)
