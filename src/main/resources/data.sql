@@ -1,12 +1,12 @@
--- -- ⚙️ 기존 데이터 초기화 (중복 방지용)
--- DELETE FROM comments;
--- DELETE FROM board;
--- DELETE FROM users;
-
--- ✅ 테스트용 사용자 데이터
-INSERT INTO users (id, username, password)
-VALUES (1, 'testuser1', 'password123');
-
-INSERT INTO users (id, username, password)
-VALUES (2, 'testuser2', 'password123');
-
+-- -- -- ⚙️ 기존 데이터 초기화 (중복 방지용)
+-- -- DELETE FROM comments;
+-- -- DELETE FROM board;
+-- -- DELETE FROM users;
+--
+-- -- ✅ 테스트용 사용자 데이터
+-- INSERT INTO users (id, username, password)
+-- VALUES (1, 'testuser1', 'password123');
+--
+-- INSERT INTO users (id, username, password)
+-- VALUES (2, 'testuser2', 'password123');
+--

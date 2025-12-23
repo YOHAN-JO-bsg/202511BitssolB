@@ -1,4 +1,4 @@
-package com.example.sideproject01.service;
+package com.example.sideproject01.security;
 
 import java.util.Collection;
 
