@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class SoundDto {
 	private Integer soundId;
-	private Integer uploader;
+	private String uploader;
 
 	@NotBlank(message = "제목은 필수 입니다")
 	private String title;
@@ -31,11 +31,10 @@ public class SoundDto {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
-	// public static SoundDto toDto(Sound entity, User userEntity) {
-	public static SoundDto toDto(Sound entity) {
+	 public static SoundDto toDto(Sound entity, User userEntity) {
 		return SoundDto.builder()
 				.soundId(entity.getSoundId())
-				// .uploader(userEntity.getUserId())
+				.uploader(userEntity.getUserName())
 				.title(entity.getTitle())
 				.description(entity.getDescription())
 				.fileUrl("/v1/sounds/stream/" + entity.getSoundId())
@@ -49,7 +48,7 @@ public class SoundDto {
 	public Sound toEntity(User userEntity) {
 		return Sound.builder()
 				.soundId(this.soundId)
-				// .uploader(userEntity)
+				.uploader(userEntity)
 				.title(this.title)
 				.description(this.description)
 				.fileUrl(this.fileUrl)
