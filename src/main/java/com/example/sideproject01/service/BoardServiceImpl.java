@@ -3,7 +3,9 @@ package com.example.sideproject01.service;
 import com.example.sideproject01.dto.BoardDto;
 import com.example.sideproject01.dto.BoardListResponse;
 import com.example.sideproject01.entity.Board;
+import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.BoardRepository;
+import com.example.sideproject01.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 public class BoardServiceImpl implements BoardService {
 
     private final BoardRepository boardRepo;
+    private final UserRepository userRepo; // UserRepository 주입
     private final LikesService likesService;
     private final VoteService voteService;
 
@@ -55,29 +58,33 @@ public class BoardServiceImpl implements BoardService {
         int endPageNum = Math.min(currentBlock * blockSize, totalPageCount);
 
         return BoardListResponse.builder()
-                .list(dtoList)
-                .pageNum(pageNum)
+                .boards(dtoList)
+                .currentPage(pageNum)
                 .pageSize(pageSize)
-                .totalRow(totalRow)
-                .totalPageCount(totalPageCount)
+                .totalElements(totalRow)
+                .totalPages(totalPageCount)
                 .startPageNum(startPageNum)
                 .endPageNum(endPageNum)
                 .category(category)
                 .build();
     }
 
-
     /**
-     * ✅ 게시글 등록
+     * ✅ 게시글 등록 (변경)
      */
     @Transactional
     @Override
-    public Long addBoard(BoardDto dto) {
+    public Long addBoard(BoardDto dto, Long userId) { // userId 파라미터 추가
+        // userId로 User 엔티티 조회
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. id=" + userId));
+
         Board entity = Board.builder()
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .category(dto.getCategory())
                 .imageUrl(dto.getImageUrl())
+                .user(user) // <-- 작성자 정보 설정
                 .build();
 
         Board saved = boardRepo.save(entity);
@@ -91,13 +98,18 @@ public class BoardServiceImpl implements BoardService {
     }
 
     /**
-     * ✅ 게시글 수정
+     * ✅ 게시글 수정 (변경)
      */
     @Transactional
     @Override
-    public BoardDto updateBoard(Long id, BoardDto dto) {
+    public BoardDto updateBoard(Long id, BoardDto dto, Long userId) { // userId 파라미터 추가
         Board entity = boardRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("수정할 게시글이 존재하지 않습니다. id=" + id));
+
+        // 권한 확인
+        if (entity.getUser() == null || !entity.getUser().getId().equals(userId)) {
+            throw new SecurityException("수정 권한이 없습니다.");
+        }
 
         entity.setTitle(dto.getTitle());
         entity.setContent(dto.getContent());
@@ -108,15 +120,20 @@ public class BoardServiceImpl implements BoardService {
     }
 
     /**
-     * ✅ 게시글 삭제
+     * ✅ 게시글 삭제 (변경)
      */
     @Transactional
     @Override
-    public String deleteBoard(Long id) {
-        if (!boardRepo.existsById(id)) {
-            throw new IllegalArgumentException("삭제할 게시글이 존재하지 않습니다. id=" + id);
+    public String deleteBoard(Long id, Long userId) { // userId 파라미터 추가
+        Board entity = boardRepo.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("삭제할 게시글이 존재하지 않습니다. id=" + id));
+
+        // 권한 확인
+        if (entity.getUser() == null || !entity.getUser().getId().equals(userId)) {
+            throw new SecurityException("삭제 권한이 없습니다.");
         }
-        boardRepo.deleteById(id);
+
+        boardRepo.delete(entity);
         return "게시글이 성공적으로 삭제되었습니다.";
     }
 
@@ -141,7 +158,8 @@ public class BoardServiceImpl implements BoardService {
         }
 
         // VoteService를 사용하여 투표 정보 추가
-        java.util.List<com.example.sideproject01.dto.VotesDto> voteOptions = voteService.getVoteOptionsWithResults(id, userId);
+        java.util.List<com.example.sideproject01.dto.VotesDto> voteOptions = voteService.getVoteOptionsWithResults(id,
+                userId);
         dto.setVoteOptions(voteOptions);
         // 사용자가 해당 게시글의 투표에 참여했는지 여부 (어떤 항목이든 하나라도 선택했다면 true)
         dto.setVotedByUser(voteOptions.stream().anyMatch(com.example.sideproject01.dto.VotesDto::isSelectedByUser));

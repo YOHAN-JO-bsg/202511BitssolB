@@ -78,6 +78,7 @@ public class VoteService {
 
         VoteResults voteResult = VoteResults.builder()
                 .user(user)
+                .board(board)
                 .votes(voteOption)
                 .build();
 
