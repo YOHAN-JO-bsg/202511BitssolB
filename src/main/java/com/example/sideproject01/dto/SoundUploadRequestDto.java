@@ -1,5 +1,7 @@
 package com.example.sideproject01.dto;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,4 +18,6 @@ public class SoundUploadRequestDto {
 	
 	@NotBlank(message="설명은 필수 입니다")
 	private String description;
+	
+	private List<Integer> tagIds;  // 태그 ID 리스트
 }

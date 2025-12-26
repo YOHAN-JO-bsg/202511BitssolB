@@ -27,11 +27,11 @@ public class Sound {
 	@GeneratedValue(strategy = GenerationType.AUTO) // 시퀀스를 자동으로 만들어줌
 	@Column(name = "sound_id")
 	private Integer soundId;
-//	
-//	@ManyToOne
-//	@JoinColumn(name="uploader_id", referencedColumnName="id")
-//	private User uploader;
-//	
+	
+	@ManyToOne
+	@JoinColumn(name="uploader_id", referencedColumnName="id")
+	private User uploader;
+	
 	private String title;
 	private String description;
 	private String fileUrl;
