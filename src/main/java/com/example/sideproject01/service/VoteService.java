@@ -115,4 +115,27 @@ public class VoteService {
             return dto;
         }).collect(Collectors.toList());
     }
+
+    /**
+     * ✅ 특정 게시글에 속한 모든 투표 데이터 삭제
+     * - VoteResults → Votes 순서로 삭제
+     */
+    @Transactional
+    public void deleteVotesByBoard(Long boardId) {
+
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new NoSuchElementException("게시글을 찾을 수 없습니다. ID: " + boardId));
+
+        // 1️⃣ 해당 게시글에 속한 모든 투표 항목 조회
+        List<Votes> votesList = votesRepository.findByBoard(board);
+
+        // 2️⃣ 각 투표 항목에 대한 투표 결과 삭제
+        for (Votes votes : votesList) {
+            voteResultsRepository.deleteByVotes(votes);
+        }
+
+        // 3️⃣ 투표 항목 삭제
+        votesRepository.deleteByBoard(board);
+    }
+
 }
