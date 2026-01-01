@@ -39,11 +39,18 @@ public class SoundServiceImpl implements SoundService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<SoundDto> getAll() {
-		List<SoundDto> dtoList = soundRepo.findAllWithUploader().stream()
-				.map(sound -> SoundDto.toDto(sound, sound.getUploader()))
-				.toList();
-		return dtoList;
+	public List<SoundDto> getAll(String sortBy) {
+		List<Sound> sounds;
+	    
+	    if ("popularity".equals(sortBy)) { // 인기순 정렬
+	        sounds = soundRepo.findAllWithUploaderByPopularity();
+	    } else {
+	        sounds = soundRepo.findAllWithUploader(); // 기본: 최신순 정렬
+	    }
+	    
+	    return sounds.stream()
+	            .map(sound -> SoundDto.toDto(sound, sound.getUploader()))
+	            .toList();
 	}
 
 	@Override
