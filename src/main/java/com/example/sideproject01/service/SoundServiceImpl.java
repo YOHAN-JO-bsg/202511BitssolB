@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,7 +15,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.sideproject01.dto.SoundDto;
 import com.example.sideproject01.dto.SoundUploadRequestDto;
 import com.example.sideproject01.entity.Sound;
+import com.example.sideproject01.entity.SoundTag;
+import com.example.sideproject01.entity.Tag;
+import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.SoundRepository;
+import com.example.sideproject01.repository.SoundTagRepository;
+import com.example.sideproject01.repository.TagRepository;
 import com.example.sideproject01.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +31,8 @@ public class SoundServiceImpl implements SoundService {
 
 	private final SoundRepository soundRepo;
 	private final UserRepository userRepo;
+	private final TagRepository tagRepo;
+	private final SoundTagRepository soundTagRepo;
 
 	@Value("${file.location}")
 	private String fileLocation; // 파일을 저장할 위치
@@ -32,8 +41,7 @@ public class SoundServiceImpl implements SoundService {
 	@Transactional(readOnly = true)
 	public List<SoundDto> getAll() {
 		List<SoundDto> dtoList = soundRepo.findAllWithUploader().stream()
-				// .map(sound -> SoundDto.toDto(sound, sound.getUploader()))
-				.map(sound -> SoundDto.toDto(sound))
+				.map(sound -> SoundDto.toDto(sound, sound.getUploader()))
 				.toList();
 		return dtoList;
 	}
@@ -41,11 +49,10 @@ public class SoundServiceImpl implements SoundService {
 	@Override
 	public SoundDto saveSound(SoundUploadRequestDto requestDto, MultipartFile soundFile,
 			MultipartFile thumbnailFile) {
-		// String
-		// userName=SecurityContextHolder.getContext().getAuthentication().getName();
-		// String userName="dummy-user";
-		// User uploader = userRepo.findByUserName(userName)
-		// .orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다."));
+		String userName=SecurityContextHolder.getContext().getAuthentication().getName();
+
+		User uploader = userRepo.findByUserName(userName)
+				.orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다."));
 
 		String title = requestDto.getTitle();
 		MultipartFile sound = soundFile;
@@ -92,13 +99,28 @@ public class SoundServiceImpl implements SoundService {
 		Sound soundEntity = Sound.builder()
 				.title(title)
 				.description(requestDto.getDescription())
-				// .uploader(uploader)
+				.uploader(uploader)
 				.fileUrl(saveFileName)
 				.thumbnailUrl(thumbnailUrl)
 				.createdAt(LocalDateTime.now())
 				.build();
 
 		soundRepo.save(soundEntity);
+		
+		// 태그 저장
+		if (requestDto.getTagIds() != null && !requestDto.getTagIds().isEmpty()) {
+		    for (Integer tagId : requestDto.getTagIds()) {
+		        Tag tag = tagRepo.findById(tagId)
+		                .orElseThrow(() -> new IllegalArgumentException("태그를 찾을 수 없습니다: " + tagId));
+		        
+		        SoundTag soundTag = SoundTag.builder()
+		                .soundId(soundEntity)
+		                .tagId(tag)
+		                .build();
+		        
+		        soundTagRepo.save(soundTag);
+		    }
+		}
 
 		return null;
 	}
@@ -107,9 +129,8 @@ public class SoundServiceImpl implements SoundService {
 	public SoundDto getSoundById(Integer soundId) {
 		Sound sound = soundRepo.findById(soundId).orElseThrow(() -> new IllegalArgumentException("해당 소리를 찾을 수 없습니다."));
 
-		// User uploader = sound.getUploader();
-		// return SoundDto.toDto(sound, uploader);
-		return SoundDto.toDto(sound);
+		 User uploader = sound.getUploader();
+		 return SoundDto.toDto(sound, uploader);
 	}
 
 	@Override

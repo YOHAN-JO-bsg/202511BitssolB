@@ -14,4 +14,5 @@ public class SoundResponseDto {
     private String title;
     private String thumbnailUrl;
     private Integer playCount;
+    private String uploader;
 }

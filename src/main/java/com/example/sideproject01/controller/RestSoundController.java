@@ -41,12 +41,14 @@ public class RestSoundController {
 	@Value("${file.location}")
 	private String fileLocation; // 파일을 저장할 위치
 	
+	//소리 파일 목록 조회
 	@GetMapping("/sounds")
 	public List<SoundDto> list(){
 		List<SoundDto> list = soundService.getAll();
 		return list;
 	}
 	
+	//소리 파일 저장
 	@PostMapping(value = "/sounds", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<SoundDto> uploadSound(
 			@Valid @RequestPart("dto") SoundUploadRequestDto requestDto,
@@ -59,12 +61,14 @@ public class RestSoundController {
 		
 	}
 	
+	//특정 소리 파일 가져오기
 	@GetMapping("/sounds/{soundId}")
 	public ResponseEntity<SoundDto> getSound(@PathVariable Integer soundId){
 		SoundDto dto = soundService.getSoundById(soundId);
 		return ResponseEntity.ok(dto);
 	}
 
+	//소리 파일 stream
     @GetMapping("/sounds/stream/{soundId}")
     public ResponseEntity<ResourceRegion> streamSound(
             @PathVariable Integer soundId,
