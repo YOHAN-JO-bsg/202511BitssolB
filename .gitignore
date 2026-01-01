@@ -1,3 +1,7 @@
 .idea/
 /target
 *.class
+# Eclipse
+.settings/
+.project
+.classpath
