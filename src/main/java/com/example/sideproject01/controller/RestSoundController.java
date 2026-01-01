@@ -116,5 +116,12 @@ public class RestSoundController {
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
                 .body(region);
     }
+    
+    //조회수 증가
+    @PostMapping("/sounds/{soundId}/play")
+    public ResponseEntity<Void> incrementPlayCount(@PathVariable Integer soundId) {
+        soundService.incrementPlayCount(soundId);
+        return ResponseEntity.ok().build();
+    }
 	
 }

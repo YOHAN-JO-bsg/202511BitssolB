@@ -153,4 +153,10 @@ public class SoundServiceImpl implements SoundService {
 		return fileUrl;
 	}
 
+	@Override
+	@Transactional
+	public void incrementPlayCount(Integer soundId) {
+	    soundRepo.incrementPlayCount(soundId);
+	}
+
 }
