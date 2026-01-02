@@ -39,24 +39,44 @@ public class SoundServiceImpl implements SoundService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<SoundDto> getAll(String sortBy) {
+	public List<SoundDto> getAll(String sortBy, String keyword, List<Integer> tagIds) {
 		List<Sound> sounds;
-	    
-	    if ("popularity".equals(sortBy)) { // 인기순 정렬
-	        sounds = soundRepo.findAllWithUploaderByPopularity();
-	    } else {
-	        sounds = soundRepo.findAllWithUploader(); // 기본: 최신순 정렬
-	    }
-	    
-	    return sounds.stream()
-	            .map(sound -> SoundDto.toDto(sound, sound.getUploader()))
-	            .toList();
+
+		boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+		boolean hasTags = tagIds != null && !tagIds.isEmpty();
+		boolean isPopularity = "popularity".equals(sortBy);
+
+		if (hasKeyword && hasTags) {
+			// 키워드 + 태그 필터
+			sounds = isPopularity
+					? soundRepo.findByKeywordAndTagIdsPopularity(keyword, tagIds)
+					: soundRepo.findByKeywordAndTagIdsLatest(keyword, tagIds);
+		} else if (hasKeyword) {
+			// 키워드만
+			sounds = isPopularity
+					? soundRepo.findByKeywordPopularity(keyword)
+					: soundRepo.findByKeywordLatest(keyword);
+		} else if (hasTags) {
+			// 태그만
+			sounds = isPopularity
+					? soundRepo.findByTagIdsPopularity(tagIds)
+					: soundRepo.findByTagIdsLatest(tagIds);
+		} else {
+			// 필터 없음
+			sounds = isPopularity
+					? soundRepo.findAllWithUploaderByPopularity()
+					: soundRepo.findAllWithUploader();
+		}
+
+		return sounds.stream()
+				.map(sound -> SoundDto.toDto(sound, sound.getUploader()))
+				.toList();
 	}
 
 	@Override
 	public SoundDto saveSound(SoundUploadRequestDto requestDto, MultipartFile soundFile,
 			MultipartFile thumbnailFile) {
-		String userName=SecurityContextHolder.getContext().getAuthentication().getName();
+		String userName = SecurityContextHolder.getContext().getAuthentication().getName();
 
 		User uploader = userRepo.findByUserName(userName)
 				.orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다."));
@@ -113,20 +133,20 @@ public class SoundServiceImpl implements SoundService {
 				.build();
 
 		soundRepo.save(soundEntity);
-		
+
 		// 태그 저장
 		if (requestDto.getTagIds() != null && !requestDto.getTagIds().isEmpty()) {
-		    for (Integer tagId : requestDto.getTagIds()) {
-		        Tag tag = tagRepo.findById(tagId)
-		                .orElseThrow(() -> new IllegalArgumentException("태그를 찾을 수 없습니다: " + tagId));
-		        
-		        SoundTag soundTag = SoundTag.builder()
-		                .soundId(soundEntity)
-		                .tagId(tag)
-		                .build();
-		        
-		        soundTagRepo.save(soundTag);
-		    }
+			for (Integer tagId : requestDto.getTagIds()) {
+				Tag tag = tagRepo.findById(tagId)
+						.orElseThrow(() -> new IllegalArgumentException("태그를 찾을 수 없습니다: " + tagId));
+
+				SoundTag soundTag = SoundTag.builder()
+						.soundId(soundEntity)
+						.tagId(tag)
+						.build();
+
+				soundTagRepo.save(soundTag);
+			}
 		}
 
 		return null;
@@ -136,8 +156,8 @@ public class SoundServiceImpl implements SoundService {
 	public SoundDto getSoundById(Integer soundId) {
 		Sound sound = soundRepo.findById(soundId).orElseThrow(() -> new IllegalArgumentException("해당 소리를 찾을 수 없습니다."));
 
-		 User uploader = sound.getUploader();
-		 return SoundDto.toDto(sound, uploader);
+		User uploader = sound.getUploader();
+		return SoundDto.toDto(sound, uploader);
 	}
 
 	@Override
@@ -156,7 +176,7 @@ public class SoundServiceImpl implements SoundService {
 	@Override
 	@Transactional
 	public void incrementPlayCount(Integer soundId) {
-	    soundRepo.incrementPlayCount(soundId);
+		soundRepo.incrementPlayCount(soundId);
 	}
 
 }
