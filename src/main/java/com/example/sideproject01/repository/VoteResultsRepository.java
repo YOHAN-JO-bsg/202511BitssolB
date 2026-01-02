@@ -1,5 +1,6 @@
 package com.example.sideproject01.repository;
 
+import com.example.sideproject01.entity.Votes;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.sideproject01.entity.VoteResults;
 
@@ -16,4 +17,7 @@ public interface VoteResultsRepository extends JpaRepository<VoteResults, Long> 
 
     // 특정 사용자가 특정 투표 항목에 투표했는지 조회
     Optional<VoteResults> findByUserAndVotes(com.example.sideproject01.entity.User user, com.example.sideproject01.entity.Votes votes);
+
+    // ✅ 특정 투표(Votes)에 대한 모든 투표 결과 삭제
+    void deleteByVotes(Votes votes);
 }
