@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.PropertySource;
 
 @PropertySource(value = "classpath:custom.properties")
-@org.springframework.context.annotation.PropertySource(value = "classpath:custom.properties")
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class SideProject01BissolApplication {
