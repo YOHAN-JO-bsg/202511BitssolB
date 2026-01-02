@@ -6,6 +6,8 @@ import com.example.sideproject01.entity.Board;
 import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.BoardRepository;
 import com.example.sideproject01.repository.UserRepository;
+import com.example.sideproject01.repository.VoteResultsRepository;
+import com.example.sideproject01.repository.VotesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +20,12 @@ import java.util.stream.Collectors;
 public class BoardServiceImpl implements BoardService {
 
     private final BoardRepository boardRepo;
+    private final VotesRepository votesRepository;
+    private final VoteResultsRepository voteResultsRepository;
     private final UserRepository userRepo; // UserRepository 주입
     private final LikesService likesService;
     private final VoteService voteService;
+
 
     /**
      * ✅ 게시글 목록 조회 (카테고리 + Oracle 11g 수동 페이징)
@@ -36,13 +41,16 @@ public class BoardServiceImpl implements BoardService {
         List<Board> boardList;
         long totalRow;
 
-        // 카테고리 필터
-        if ("all".equalsIgnoreCase(category)) {
+        // ✅ 카테고리 필터 로직 강화
+        System.out.println("Processing Category Filtering: [" + category + "]");
+
+        if (category == null || category.trim().isEmpty() || "all".equalsIgnoreCase(category)) {
             boardList = boardRepo.findAllWithPagination(startRow, endRow);
             totalRow = boardRepo.count();
+            category = "all"; // 리스폰스 값 통일
         } else {
-            boardList = boardRepo.findByCategoryWithPagination(category, startRow, endRow);
-            totalRow = boardRepo.countByCategory(category);
+            boardList = boardRepo.findByCategoryWithPagination(category.trim(), startRow, endRow);
+            totalRow = boardRepo.countByCategory(category.trim());
         }
 
         // Entity → DTO 변환
@@ -124,18 +132,24 @@ public class BoardServiceImpl implements BoardService {
      */
     @Transactional
     @Override
-    public String deleteBoard(Long id, Long userId) { // userId 파라미터 추가
-        Board entity = boardRepo.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("삭제할 게시글이 존재하지 않습니다. id=" + id));
+    public String deleteBoard(Long id, Long userId) {
 
-        // 권한 확인
+        Board entity = boardRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("삭제할 게시글이 존재하지 않습니다. id=" + id));
+
         if (entity.getUser() == null || !entity.getUser().getId().equals(userId)) {
             throw new SecurityException("삭제 권한이 없습니다.");
+        }
+
+        // ✅ 투표글이면 투표 데이터 먼저 삭제
+        if ("vote".equals(entity.getCategory())) {
+            voteService.deleteVotesByBoard(id);
         }
 
         boardRepo.delete(entity);
         return "게시글이 성공적으로 삭제되었습니다.";
     }
+
 
     /**
      * ✅ 게시글 상세조회 (조회수 +1 포함)
