@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,8 +44,8 @@ public class RestSoundController {
 	
 	//소리 파일 목록 조회
 	@GetMapping("/sounds")
-	public List<SoundDto> list(){
-		List<SoundDto> list = soundService.getAll();
+	public List<SoundDto> list(@RequestParam(defaultValue = "latest")String sortBy){
+		List<SoundDto> list = soundService.getAll(sortBy);
 		return list;
 	}
 	
@@ -114,6 +115,13 @@ public class RestSoundController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
                 .body(region);
+    }
+    
+    //조회수 증가
+    @PostMapping("/sounds/{soundId}/play")
+    public ResponseEntity<Void> incrementPlayCount(@PathVariable Integer soundId) {
+        soundService.incrementPlayCount(soundId);
+        return ResponseEntity.ok().build();
     }
 	
 }

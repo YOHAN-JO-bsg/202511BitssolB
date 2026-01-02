@@ -9,9 +9,9 @@ import com.example.sideproject01.dto.SoundUploadRequestDto;
 
 
 public interface SoundService {
-	public List<SoundDto> getAll();
+	public List<SoundDto> getAll(String sortBy);
 	public SoundDto saveSound(SoundUploadRequestDto requestDto, MultipartFile soundFile, MultipartFile thumbnailFile);
 	public SoundDto getSoundById(Integer soundId);
 	public String getSoundFileUrl(Integer soundId);
-	
+	public void incrementPlayCount(Integer soundId);
 }
