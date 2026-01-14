@@ -32,9 +32,9 @@ public class CommentDto {
     private int likeCount;
     private boolean likedByUser;
 
-    /**
-     * Entity -> DTO 변환 (JPA에서 사용)
-     */
+
+    // Entity -> DTO 변환
+
     public static CommentDto fromEntity(Comments entity) {
         return CommentDto.builder()
                 .commentId(entity.getCommentsId())
@@ -49,9 +49,9 @@ public class CommentDto {
                 .build();
     }
 
-    /**
-     * DTO -> Entity 변환 (JPA에서 사용)
-     */
+
+     // DTO -> Entity 변환
+
     public Comments toEntity() {
         return Comments.builder()
                 .commentsId(this.commentId)

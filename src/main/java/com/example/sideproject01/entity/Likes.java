@@ -9,8 +9,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "likes", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "target_type", "target_id"})
+        @UniqueConstraint(columnNames = {"user_id", "target_type", "target_id"})
 })
+
 @Getter
 @Setter
 @NoArgsConstructor

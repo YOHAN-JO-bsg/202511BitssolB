@@ -88,4 +88,7 @@ public class LikesService {
                 .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다. ID: " + userId));
         return likesRepository.findByUserAndTargetTypeAndTargetId(user, targetType, targetId).isPresent();
     }
+
+    public void deleteByBoardId(Long boardId) {
+    }
 }

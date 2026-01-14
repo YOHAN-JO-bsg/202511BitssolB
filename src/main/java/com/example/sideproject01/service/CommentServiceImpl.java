@@ -140,4 +140,16 @@ public class CommentServiceImpl implements CommentService {
 
                 comment.setIsHidden(1);
         }
+
+    @Override
+    public long getCommentCount(Long boardId) {
+        return commentsRepository.countAllCommentsByBoard(boardId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteByBoardId(Long boardId) {
+        commentsRepository.deleteByBoardId(boardId);
+    }
+
 }

@@ -38,7 +38,7 @@ public class VoteResults {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // ⭐ 투표가 속한 게시글 (중복 투표 체크용)
+    // 투표가 속한 게시글 (중복 투표 체크용)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;

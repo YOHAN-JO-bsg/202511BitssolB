@@ -24,7 +24,7 @@ public class LikesDto {
     private Long targetId;       // 대상 ID (게시글 or 댓글)
     private LocalDateTime createdAt; // 좋아요 일자
 
-    // ✅ Entity → DTO 변환
+    // Entity → DTO 변환
     public static LikesDto toDto(Likes entity) {
         return LikesDto.builder()
                 .likeId(entity.getLikeId())
@@ -35,7 +35,7 @@ public class LikesDto {
                 .build();
     }
 
-    // ✅ DTO → Entity 변환
+    // DTO → Entity 변환
     public Likes toEntity() {
         return Likes.builder()
                 .likeId(this.likeId)

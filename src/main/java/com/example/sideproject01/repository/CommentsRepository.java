@@ -1,7 +1,9 @@
 package com.example.sideproject01.repository;
 
+import com.example.sideproject01.entity.Board;
 import com.example.sideproject01.entity.Comments;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -36,4 +38,14 @@ public interface CommentsRepository extends JpaRepository<Comments, Long> {
 
 
     List<Comments> findByParentAndIsHiddenOrderByCreatedAtAsc(Comments parent, Integer isHidden);
+
+    @Query(
+            value = "SELECT COUNT(*) FROM comments WHERE board_id = :boardId AND is_hidden = 0",
+            nativeQuery = true
+    )
+    long countAllCommentsByBoard(@Param("boardId") Long boardId);
+
+    @Modifying
+    @Query("delete from Comments c where c.board.id = :boardId")
+    void deleteByBoardId(@Param("boardId") Long boardId);
 }

@@ -2,12 +2,11 @@ package com.example.sideproject01.service;
 
 import com.example.sideproject01.dto.BoardDto;
 import com.example.sideproject01.dto.BoardListResponse;
+import com.example.sideproject01.dto.VotesDto;
 import com.example.sideproject01.entity.Board;
 import com.example.sideproject01.entity.User;
 import com.example.sideproject01.repository.BoardRepository;
 import com.example.sideproject01.repository.UserRepository;
-import com.example.sideproject01.repository.VoteResultsRepository;
-import com.example.sideproject01.repository.VotesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,16 +19,12 @@ import java.util.stream.Collectors;
 public class BoardServiceImpl implements BoardService {
 
     private final BoardRepository boardRepo;
-    private final VotesRepository votesRepository;
-    private final VoteResultsRepository voteResultsRepository;
-    private final UserRepository userRepo; // UserRepository 주입
+    private final UserRepository userRepo;
     private final LikesService likesService;
     private final VoteService voteService;
+    private final CommentService commentService;
 
-
-    /**
-     * ✅ 게시글 목록 조회 (카테고리 + Oracle 11g 수동 페이징)
-     */
+    // 게시글 목록 조회
     @Transactional(readOnly = true)
     @Override
     public BoardListResponse getBoardList(int pageNum, int pageSize, String category) {
@@ -41,13 +36,10 @@ public class BoardServiceImpl implements BoardService {
         List<Board> boardList;
         long totalRow;
 
-        // ✅ 카테고리 필터 로직 강화
-        System.out.println("Processing Category Filtering: [" + category + "]");
-
         if (category == null || category.trim().isEmpty() || "all".equalsIgnoreCase(category)) {
             boardList = boardRepo.findAllWithPagination(startRow, endRow);
             totalRow = boardRepo.count();
-            category = "all"; // 리스폰스 값 통일
+            category = "all";
         } else {
             boardList = boardRepo.findByCategoryWithPagination(category.trim(), startRow, endRow);
             totalRow = boardRepo.countByCategory(category.trim());
@@ -58,9 +50,9 @@ public class BoardServiceImpl implements BoardService {
                 .map(BoardDto::new)
                 .collect(Collectors.toList());
 
-        // ✅ 페이지 정보 수동 계산
+        // 페이지 정보 수동 계산
         int totalPageCount = (int) Math.ceil((double) totalRow / pageSize);
-        int blockSize = 2; // ⭐ 한 번에 보여줄 페이지 수를 2로 설정
+        int blockSize = 2;
         int currentBlock = (int) Math.ceil((double) pageNum / blockSize);
         int startPageNum = (currentBlock - 1) * blockSize + 1;
         int endPageNum = Math.min(currentBlock * blockSize, totalPageCount);
@@ -135,20 +127,29 @@ public class BoardServiceImpl implements BoardService {
     public String deleteBoard(Long id, Long userId) {
 
         Board entity = boardRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("삭제할 게시글이 존재하지 않습니다. id=" + id));
+                .orElseThrow(() -> new IllegalArgumentException("삭제할 게시글이 없습니다."));
 
-        if (entity.getUser() == null || !entity.getUser().getId().equals(userId)) {
+        if (!entity.getUser().getId().equals(userId)) {
             throw new SecurityException("삭제 권한이 없습니다.");
         }
 
-        // ✅ 투표글이면 투표 데이터 먼저 삭제
+        // 1️⃣ 댓글 & 대댓글 삭제
+        commentService.deleteByBoardId(id);
+
+        // 2️⃣ 좋아요 삭제
+        likesService.deleteByBoardId(id);
+
+        // 3️⃣ 투표 삭제
         if ("vote".equals(entity.getCategory())) {
             voteService.deleteVotesByBoard(id);
         }
 
+        // 4️⃣ 마지막에 게시글 삭제
         boardRepo.delete(entity);
+
         return "게시글이 성공적으로 삭제되었습니다.";
     }
+
 
 
     /**
@@ -156,28 +157,34 @@ public class BoardServiceImpl implements BoardService {
      */
     @Transactional
     @Override
-    public BoardDto getDetail(Long id, Long userId) { // userId 파라미터 추가
+    public BoardDto getDetail(Long id, Long userId) {
+
         Board entity = boardRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다. id=" + id));
 
         entity.setViewCount(entity.getViewCount() + 1);
-        BoardDto dto = new BoardDto(entity); // DTO 생성
+        BoardDto dto = new BoardDto(entity);
 
-        // LikesService를 사용하여 좋아요 정보 추가
+        // ❤️ 좋아요
         dto.setLikeCount(likesService.getLikeCount("BOARD", id));
-        if (userId != null) { // userId가 제공된 경우에만 좋아요 여부 확인
+        if (userId != null) {
             dto.setLikedByUser(likesService.isLikedByUser(userId, "BOARD", id));
         } else {
-            dto.setLikedByUser(false); // userId가 없으면 좋아요 안 누른 것으로 처리
+            dto.setLikedByUser(false);
         }
 
-        // VoteService를 사용하여 투표 정보 추가
-        java.util.List<com.example.sideproject01.dto.VotesDto> voteOptions = voteService.getVoteOptionsWithResults(id,
-                userId);
+        // 🗳 투표
+        List<VotesDto> voteOptions = voteService.getVoteOptionsWithResults(id, userId);
         dto.setVoteOptions(voteOptions);
-        // 사용자가 해당 게시글의 투표에 참여했는지 여부 (어떤 항목이든 하나라도 선택했다면 true)
-        dto.setVotedByUser(voteOptions.stream().anyMatch(com.example.sideproject01.dto.VotesDto::isSelectedByUser));
+        dto.setVotedByUser(
+                voteOptions.stream().anyMatch(VotesDto::isSelectedByUser)
+        );
+
+        // ✅🔥 댓글 수 (이 줄만 추가)
+        long commentCount = commentService.getCommentCount(id);
+        dto.setCommentCount(commentCount);
 
         return dto;
     }
+
 }

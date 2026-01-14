@@ -4,7 +4,7 @@ import com.example.sideproject01.security.CustomUserDetails;
 import com.example.sideproject01.service.LikesService;
 import com.example.sideproject01.service.VoteService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal; // ✅ 추가
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.sideproject01.dto.BoardDto;
@@ -23,7 +23,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1")
-@CrossOrigin(origins = "http://localhost:5173") // 프론트엔드 CORS 허용
 @Tag(name = "Board", description = "Board and Comment API")
 public class BoardController {
 
@@ -32,64 +31,56 @@ public class BoardController {
     private final LikesService likesService;
     private final VoteService voteService;
 
-    /**
-     * ✅ [댓글 관련 API]
-     */
-
     // 댓글 등록
     @PostMapping("/board/{boardId}/comments")
     public ResponseEntity<Void> createComment(
             @PathVariable Long boardId,
             @RequestBody CommentDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 로그인 사용자 주입
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        // 🔧 수정: userId를 토큰에서 직접 추출
         commentService.createComment(boardId, dto, userDetails.getUserId());
         return ResponseEntity.noContent().build();
     }
 
-    // 댓글 수정 (수동 userId 제거 -> 보안 적용)
+    // 댓글 수정
     @PatchMapping("/comments/{commentId}")
     public ResponseEntity<Void> updateComment(
             @PathVariable Long commentId,
             @RequestBody CommentDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 변경
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         commentService.updateComment(commentId, dto, userDetails.getUserId());
         return ResponseEntity.noContent().build();
     }
 
-    // 댓글 삭제 (수동 userId 제거 -> 보안 적용)
+    // 댓글 삭제
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long commentId,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 변경
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         commentService.deleteComment(commentId, userDetails.getUserId());
         return ResponseEntity.noContent().build();
     }
 
-    // 댓글 목록 (비회원 가능)
+    // 댓글 목록
     @GetMapping("/board/{boardId}/comments")
     public ResponseEntity<CommentListResponse> getComments(
             @PathVariable Long boardId,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ nullable
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        // 🔧 수정: 비로그인 시 null 처리
         Long userId = (userDetails != null) ? userDetails.getUserId() : null;
         CommentListResponse response = commentService.getComments(boardId, pageNum, pageSize, userId);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * ✅ [좋아요 관련 API] (보안 적용)
-     */
+    // 좋아요
     @PostMapping("/likes")
     public ResponseEntity<Boolean> toggleLike(
             @RequestBody LikesDto likesDto,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 변경
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         boolean isLiked = likesService.toggleLike(
                 userDetails.getUserId(),
@@ -99,13 +90,11 @@ public class BoardController {
         return ResponseEntity.ok(isLiked);
     }
 
-    /**
-     * ✅ [투표 관련 API] (보안 적용)
-     */
+    // 투표
     @PostMapping("/votes/cast")
     public ResponseEntity<Long> castVote(
             @RequestBody VoteResultsDto voteResultsDto,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 변경
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long resultId = voteService.castVote(
                 userDetails.getUserId(),
@@ -114,11 +103,7 @@ public class BoardController {
         return ResponseEntity.ok(resultId);
     }
 
-    /**
-     * ✅ [게시글 관련 API]
-     */
-
-    // 게시글 목록 (비회원 가능)
+    // 게시글 목록
     @GetMapping("/board")
     public ResponseEntity<BoardListResponse> getBoardList(
             @RequestParam(defaultValue = "all") String category,
@@ -128,11 +113,11 @@ public class BoardController {
         return ResponseEntity.ok(response);
     }
 
-    // 게시글 상세조회 (비회원 가능 -> 읽기 전용)
+    // 게시글 상세조회
     @GetMapping("/board/{id}")
     public ResponseEntity<BoardDto> getDetail(
             @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 변경
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long userId = (userDetails != null) ? userDetails.getUserId() : null;
         BoardDto dto = boardService.getDetail(id, userId);
@@ -143,9 +128,8 @@ public class BoardController {
     @PostMapping("/board")
     public ResponseEntity<BoardDto> createBoard(
             @Valid @RequestBody BoardDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 변경
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        // 🔧 수정: Service 시그니처에 맞게 userId 전달
         Long id = boardService.addBoard(dto, userDetails.getUserId());
         dto.setBoardId(id);
         return ResponseEntity.ok(dto);
@@ -156,7 +140,7 @@ public class BoardController {
     public ResponseEntity<BoardDto> updateBoard(
             @PathVariable Long id,
             @RequestBody BoardDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 변경
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         BoardDto updated = boardService.updateBoard(id, dto, userDetails.getUserId());
         return ResponseEntity.ok(updated);
@@ -166,7 +150,7 @@ public class BoardController {
     @DeleteMapping("/board/{id}")
     public ResponseEntity<String> deleteBoard(
             @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails userDetails // ✅ 변경
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         String result = boardService.deleteBoard(id, userDetails.getUserId());
         return ResponseEntity.ok(result);
