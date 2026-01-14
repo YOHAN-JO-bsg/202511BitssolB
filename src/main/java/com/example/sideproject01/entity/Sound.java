@@ -36,7 +36,10 @@ public class Sound {
 	private String description;
 	private String fileUrl;
 	private String thumbnailUrl;
-	private Integer playCount;
+	
+	@Builder.Default
+	private Integer playCount = 0;
+	
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 }
