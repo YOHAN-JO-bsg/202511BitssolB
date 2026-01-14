@@ -37,39 +37,48 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/v1")
 public class RestSoundController {
 
-	private final SoundService soundService;
-	
-	@Value("${file.location}")
-	private String fileLocation; // 파일을 저장할 위치
-	
-	//소리 파일 목록 조회
-	@GetMapping("/sounds")
-	public List<SoundDto> list(@RequestParam(defaultValue = "latest")String sortBy){
-		List<SoundDto> list = soundService.getAll(sortBy);
-		return list;
-	}
-	
-	//소리 파일 저장
-	@PostMapping(value = "/sounds", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<SoundDto> uploadSound(
-			@Valid @RequestPart("dto") SoundUploadRequestDto requestDto,
-		    @RequestPart("soundFile") MultipartFile soundFile,
-		    @RequestPart("thumbnailFile") MultipartFile thumbnailFile
-	){
-		SoundDto dto = soundService.saveSound(requestDto, soundFile, thumbnailFile);
-		
-		return ResponseEntity.status(HttpStatus.CREATED).body(new SoundDto());
-		
-	}
-	
-	//특정 소리 파일 가져오기
-	@GetMapping("/sounds/{soundId}")
-	public ResponseEntity<SoundDto> getSound(@PathVariable Integer soundId){
-		SoundDto dto = soundService.getSoundById(soundId);
-		return ResponseEntity.ok(dto);
-	}
+    private final SoundService soundService;
 
-	//소리 파일 stream
+    @Value("${file.location}")
+    private String fileLocation; // 파일을 저장할 위치
+
+    // 소리 파일 목록 조회
+    @GetMapping("/sounds")
+    public List<SoundDto> list(
+            @RequestParam(defaultValue = "latest") String sortBy,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String tagIds) {
+        List<Integer> tagIdList = null;
+        if (tagIds != null && !tagIds.isEmpty()) {
+            tagIdList = java.util.Arrays.stream(tagIds.split(","))
+                    .map(String::trim)
+                    .map(Integer::parseInt)
+                    .toList();
+        }
+        List<SoundDto> list = soundService.getAll(sortBy, keyword, tagIdList);
+        return list;
+    }
+
+    // 소리 파일 저장
+    @PostMapping(value = "/sounds", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SoundDto> uploadSound(
+            @Valid @RequestPart("dto") SoundUploadRequestDto requestDto,
+            @RequestPart("soundFile") MultipartFile soundFile,
+            @RequestPart("thumbnailFile") MultipartFile thumbnailFile) {
+        SoundDto dto = soundService.saveSound(requestDto, soundFile, thumbnailFile);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SoundDto());
+
+    }
+
+    // 특정 소리 파일 가져오기
+    @GetMapping("/sounds/{soundId}")
+    public ResponseEntity<SoundDto> getSound(@PathVariable Integer soundId) {
+        SoundDto dto = soundService.getSoundById(soundId);
+        return ResponseEntity.ok(dto);
+    }
+
+    // 소리 파일 stream
     @GetMapping("/sounds/stream/{soundId}")
     public ResponseEntity<ResourceRegion> streamSound(
             @PathVariable Integer soundId,
@@ -109,19 +118,19 @@ public class RestSoundController {
         // Content-Type 동적 결정
         String contentType = filename.endsWith(".mp3") ? "audio/mpeg"
                 : filename.endsWith(".wav") ? "audio/wav"
-                : "audio/mpeg"; // 기본값
+                        : "audio/mpeg"; // 기본값
 
         return ResponseEntity.status(status)
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
                 .body(region);
     }
-    
-    //조회수 증가
+
+    // 조회수 증가
     @PostMapping("/sounds/{soundId}/play")
     public ResponseEntity<Void> incrementPlayCount(@PathVariable Integer soundId) {
         soundService.incrementPlayCount(soundId);
         return ResponseEntity.ok().build();
     }
-	
+
 }
