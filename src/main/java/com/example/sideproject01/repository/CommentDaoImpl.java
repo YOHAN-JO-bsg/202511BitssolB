@@ -54,12 +54,7 @@ public class CommentDaoImpl implements CommentDao{
 
 	@Override
 	public int getCount(int parentNum) {
-		/*
-		 * parameterType => int
-		 * resultType => int
-		 * sql 의 id => getCount
-		 */
-		
+
 		return session.selectOne("comment.getCount", parentNum);
 	}
 

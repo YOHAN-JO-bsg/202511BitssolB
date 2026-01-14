@@ -14,6 +14,11 @@ public interface CommentService {
     // 댓글 수정 (작성자만)
     void updateComment(Long commentId, CommentDto dto, Long userId);
 
-    // 댓글 삭제 (작성자만) ✅ 이게 반드시 있어야 함
+    // 댓글 삭제 (작성자만)
     void deleteComment(Long commentId, Long userId);
+
+    // 댓글 총갯수 카운트
+    long getCommentCount(Long boardId);
+
+    void deleteByBoardId(Long boardId);
 }

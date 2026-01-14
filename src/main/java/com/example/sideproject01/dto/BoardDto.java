@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.example.sideproject01.entity.Board;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import java.util.List;
 
 import lombok.*;
 
@@ -14,10 +15,10 @@ import lombok.*;
 public class BoardDto {
 
     private Long boardId;       // 게시글 번호
-    private String writer;      // 작성자명 (User 엔티티에서 가져올 예정)
+    private String writer;      // 작성자명
     private String title;       // 제목
     private String content;     // 내용
-    private String category;    // 카테고리 (free, daily, question 등)
+    private String category;    // 카테고리
     private int viewCount;      // 조회수
     private String imageUrl;    // 이미지 URL
 
@@ -26,11 +27,14 @@ public class BoardDto {
     private boolean likedByUser; // 현재 사용자의 좋아요 여부
 
     // 투표 정보
-    private java.util.List<VotesDto> voteOptions; // 투표 항목 목록 (VotesDto는 voteCount, selectedByUser 포함)
-    private boolean isVotedByUser; // 현재 사용자가 투표에 참여했는지 여부
+    private java.util.List<VotesDto> voteOptions; // 투표 항목 목록
+    private boolean isVotedByUser;
+
+    // 투표 갯수
+    private long commentCount;
 
     // 투표 항목 생성 요청용
-    private java.util.List<String> voteOptionTexts;
+    private List<String> voteOptionTexts;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime createdAt;
@@ -46,7 +50,7 @@ public class BoardDto {
     private Long prevId;
     private Long nextId;
 
-    // 🔄 엔티티 → DTO 변환 생성자
+    // 엔티티 → DTO 변환 생성자
     public BoardDto(Board board) {
         this.boardId = board.getBoardId();
         this.title = board.getTitle();
@@ -57,10 +61,9 @@ public class BoardDto {
         this.createdAt = board.getCreatedAt();
         this.updatedAt = board.getUpdatedAt();
 
-        // FK인 Users 엔티티의 값은 null 체크 후 이름 꺼내기
+        // 글 등록시 유저 아이디 가져오기
         if (board.getUser() != null) {
-            this.writer = "user" + board.getUser().getId(); 
-            // 👉 나중에 Users 엔티티에 name이나 nickname 필드 생기면 그걸로 교체
+            this.writer = board.getUser().getUserName();
         } else {
             this.writer = "익명";
         }
