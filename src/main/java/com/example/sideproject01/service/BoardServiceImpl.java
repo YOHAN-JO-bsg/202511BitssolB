@@ -47,7 +47,12 @@ public class BoardServiceImpl implements BoardService {
 
         // Entity → DTO 변환
         List<BoardDto> dtoList = boardList.stream()
-                .map(BoardDto::new)
+                .map(board -> {
+                    BoardDto dto = new BoardDto(board);
+                    dto.setLikeCount(likesService.getLikeCount("BOARD", board.getBoardId()));
+                    dto.setCommentCount(commentService.getCommentCount(board.getBoardId()));
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
         // 페이지 정보 수동 계산
@@ -150,8 +155,6 @@ public class BoardServiceImpl implements BoardService {
         return "게시글이 성공적으로 삭제되었습니다.";
     }
 
-
-
     /**
      * ✅ 게시글 상세조회 (조회수 +1 포함)
      */
@@ -177,8 +180,7 @@ public class BoardServiceImpl implements BoardService {
         List<VotesDto> voteOptions = voteService.getVoteOptionsWithResults(id, userId);
         dto.setVoteOptions(voteOptions);
         dto.setVotedByUser(
-                voteOptions.stream().anyMatch(VotesDto::isSelectedByUser)
-        );
+                voteOptions.stream().anyMatch(VotesDto::isSelectedByUser));
 
         // ✅🔥 댓글 수 (이 줄만 추가)
         long commentCount = commentService.getCommentCount(id);
